@@ -11,9 +11,13 @@ namespace AccessBot.Application.DI;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services,
+        Action<BotConfiguration> botConfigure, Action<ClientConfiguration> clientConfigure)
     {
+        services.Configure(botConfigure);
+        services.Configure(clientConfigure);
         services.AddOptions<BotConfiguration>();
+        services.AddOptions<ClientConfiguration>();
         // services.AddSingleton<IBotStateService, BotStateService>();
         services.AddHttpClient("telegram_bot_client")
             .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
@@ -26,6 +30,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IChatStates, ChatStates>();
         services.AddScoped<UpdateHandlers>();
         services.AddTransient<IClock>(_ => SystemClock.Instance);
+        services.AddSingleton<ICodeStorage, CodeStorage>();
+        services.AddHostedService<ChannelUpdateService>();
+        services.AddSingleton<InvitationLink>();
 
         return services;
     }

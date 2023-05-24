@@ -8,13 +8,16 @@ public class User
     {
     }
 
-    public User(long id, User? inviter = default)
+    public User(long id, string? username = default, User? inviter = default)
     {
         Id = id;
         Inviter = inviter;
+        Username = username;
     }
 
     public long Id { get; }
+    
+    public string? Username { get; set; }
 
     public Instant PaidUntil { get; set; } = Instant.MinValue;
 

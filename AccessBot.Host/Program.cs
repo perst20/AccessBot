@@ -1,14 +1,12 @@
 using AccessBot.Application.Configuration;
 using AccessBot.Application.DI;
+using AccessBot.Application.Services;
 using AccessBot.Persistence.DI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
-builder.Services.Configure<BotConfiguration>(botConfigurationSection);
 
 builder.Services.AddHttpClient("telegram_bot_client")
     .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
@@ -20,10 +18,14 @@ builder.Services.AddHttpClient("telegram_bot_client")
     });
 
 builder.Services
-    .AddApplication()
+    .AddApplication(
+        x => builder.Configuration.GetSection(nameof(BotConfiguration)).Bind(x),
+        x => builder.Configuration.GetSection(nameof(ClientConfiguration)).Bind(x))
     .AddPersistence(options =>
     {
-        options.UseNpgsql("Host=localhost;Database=User;User ID=postgres;Password=postgres",
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("postgres") ??
+            "Host=localhost;Database=User;User ID=postgres;Password=postgres",
             o =>
             {
                 o.UseNodaTime();
@@ -37,4 +39,13 @@ builder.Services
 
 var app = builder.Build();
 app.MapControllers();
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+// Here is the migration executed
+    dbContext.Database.Migrate();
+}
+
 app.Run();

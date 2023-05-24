@@ -26,4 +26,12 @@ public class BotController : ControllerBase
         await _handlers.HandleUpdateAsync(update, cancellationToken);
         return Ok();
     }
+
+    [HttpPost]
+    [Route("/code")]
+    public Task<IActionResult> PostCode([FromQuery] int code, [FromServices] ICodeStorage codeStorage)
+    {
+        codeStorage.TrySet(code);
+        return Task.FromResult<IActionResult>(Ok());
+    }
 }

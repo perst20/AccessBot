@@ -7,7 +7,8 @@ public enum ChatState
     New,
     Start,
     Pay,
-    Prolong
+    Prolong,
+    State
 }
 
 public interface IChatStates
